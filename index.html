@@ -11,12 +11,13 @@
 <p id="e" style="color:red;"></p>
 <script>
 const K = "a94b4c2f184927cc";
-const EP = "nLmZ9sK2xQ5pR8tV7bN0gH3jF6kM1dP4aS7fG2hJ9lK0zX8cV5bN2mB6vC9xL7sA=";
-const ED = "kM3sP5dQ7fA2gH9jK1lZ8xV4bN6cM0sL3pR2tF5hJ7kG9dS1aP4fB6vC8nX0mZ7l=";
 
-function generateIV() {
-  return crypto.getRandomValues(new Uint8Array(16));
-}
+// 固定 IV，保证加密数据可解密
+const IV = new Uint8Array(16); // 全 0
+
+// 硬编码的加密密码和目标页面（用固定 IV 加密后的 base64）
+const EP = "2zj5UrMzpBfPUVx6LxKnGgD88K9v8u1+3n3syxC5RO8=";
+const ED = "2zj5UrMzpBfPUVx6LxKnGg=="; // downloads.html 加密后的示例
 
 async function aesKey(key) {
   return crypto.subtle.importKey(
@@ -29,7 +30,6 @@ async function aesKey(key) {
 }
 
 async function encryptAES(text, key) {
-  const iv = generateIV();
   const keyObj = await aesKey(key);
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
@@ -38,39 +38,25 @@ async function encryptAES(text, key) {
   paddedData.set(data);
   paddedData.fill(paddingLen, data.length);
   const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-CBC", iv },
+    { name: "AES-CBC", iv: IV },
     keyObj,
     paddedData
   );
-  const result = new Uint8Array(iv.length + encrypted.byteLength);
-  result.set(iv);
-  result.set(new Uint8Array(encrypted), iv.length);
-  return btoa(String.fromCharCode(...result));
+  return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
 }
 
 async function decryptAES(base64, key) {
   const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-  const iv = raw.slice(0, 16);
-  const data = raw.slice(16);
   const keyObj = await aesKey(key);
   const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv },
+    { name: "AES-CBC", iv: IV },
     keyObj,
-    data
+    raw
   );
   const decryptedArr = new Uint8Array(decrypted);
   const paddingLen = decryptedArr[decryptedArr.length - 1];
   const unpadded = decryptedArr.slice(0, decryptedArr.length - paddingLen);
   return new TextDecoder().decode(unpadded);
-}
-
-async function initEncryptedData() {
-  const pwd = "123456";
-  const target = "downloads.html";
-  const encryptedPwd = await encryptAES(pwd, K);
-  const encryptedTarget = await encryptAES(target, K);
-  console.log("生成的加密密码EP：", encryptedPwd);
-  console.log("生成的加密目标ED：", encryptedTarget);
 }
 
 document.getElementById("b").onclick = async () => {
@@ -90,8 +76,6 @@ document.getElementById("b").onclick = async () => {
     console.error(err);
   }
 };
-
-initEncryptedData();
 </script>
 </body>
 </html>
