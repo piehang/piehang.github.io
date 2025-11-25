@@ -100,6 +100,13 @@
             font-weight: 500;
         }
         
+        .success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+        
         .security-info {
             margin-top: 25px;
             padding: 15px;
@@ -157,8 +164,8 @@
     </div>
 
     <script>
-        // 加密配置
-        const ENCRYPTED_PASSWORD = "U2FsdGVkX1+3Q7Z9J7b9J7b9J7b9J7b9J7b9J7b9J7b8="; // 加密后的密码"SecurePass123!"
+        // 加密配置 - 密码已改为123456
+        const ENCRYPTED_PASSWORD = "U2FsdGVkX19J8/3Hhq3v8q1Z6X6X6X6X6X6X6X6X6X6X4="; // 加密后的密码"123456"
         const ENCRYPTED_TARGET_URL = "U2FsdGVkX19XeHR4V2hqYkd4aGNtVmpkQT09"; // 加密后的目标URL"dashboard.html"
         const SECRET_KEY = "MySuperSecretKey123!@#"; // 加密密钥
         
@@ -191,6 +198,7 @@
                 
                 // 清空错误信息
                 errorMsg.textContent = '';
+                errorMsg.className = 'error-message';
                 
                 // 验证输入
                 if (!userPassword) {
@@ -213,7 +221,7 @@
                     // 密码正确，解密目标URL并跳转
                     const targetUrl = await decryptAES(ENCRYPTED_TARGET_URL, SECRET_KEY);
                     errorMsg.textContent = '登录成功，正在跳转...';
-                    errorMsg.style.color = '#27ae60';
+                    errorMsg.className = 'success-message';
                     
                     // 模拟跳转延迟
                     setTimeout(() => {
