@@ -1,257 +1,39 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>密码保护下载站（示例）</title>
-  <style>
-    /* 简单的重置和布局 */
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", Arial;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg,#0f172a 0%, #0b3a66 100%);
-      color: #fff;
-      padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 900px;
-      background: rgba(255,255,255,0.04);
-      border-radius: 12px;
-      padding: 28px;
-      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-      backdrop-filter: blur(6px);
-    }
-
-    h1 { margin: 0 0 12px 0; font-size: 20px; }
-    p { margin: 0 0 18px 0; color: #cfe7ff; }
-
-    /* 两个部分并排显示（窄屏顺序堆叠） */
-    .split {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-    .panel {
-      flex: 1;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      padding: 20px;
-      border-radius: 8px;
-      min-height: 220px;
-      transition: transform .28s ease, opacity .28s ease;
-    }
-
-    /* 输入样式 */
-    .field {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    input[type="password"] {
-      flex: 1;
-      padding: 10px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.02);
-      color: #fff;
-      outline: none;
-    }
-    button {
-      padding: 10px 14px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(90deg,#06b6d4,#3b82f6);
-      color: #042027;
-      font-weight: 600;
-    }
-    button:active { transform: translateY(1px); }
-
-    .hint { color: #9fbfe6; font-size: 13px; margin-top: 8px; }
-
-    /* 下载列表（第二部分） */
-    .download-list { list-style: none; margin: 0; padding: 0; }
-    .download-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.03);
-    }
-    .file-meta { display:flex; gap:12px; align-items:center; }
-    .file-name { font-weight:600; }
-    .file-size { color:#9fbfe6; font-size:13px; }
-
-    /* 初始隐藏第二部分（受保护） */
-    #downloads {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(18px) scale(.995);
-      height: 0;
-      overflow: hidden;
-    }
-    /* 显示时的样式 */
-    #downloads.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0) scale(1);
-      height: auto;
-    }
-
-    /* 小屏响应 */
-    @media (max-width:700px){
-      .split { flex-direction: column; }
-    }
-
-    /* 错误提示 */
-    .error { color: #ffb3b3; margin-top: 8px; font-size: 14px; }
-
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>密码页</title>
 </head>
 <body>
-  <div class="container" role="main">
-    <h1>受保护的下载站（示例）</h1>
-    <p>页面分为两部分：输入密码 → 成功后访问下载区（仅做前端演示）。</p>
+<h1>请输入密码</h1>
+<input type="password" id="passwordInput" placeholder="密码">
+<button id="submitBtn">提交</button>
+<p id="error" style="color:red;"></p>
 
-    <div class="split">
-      <!-- 第一部分：密码 -->
-      <div class="panel" id="passwordPanel" aria-labelledby="pwTitle">
-        <h2 id="pwTitle">输入密码</h2>
+<script>
+const CORRECT_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a42f0ebfbd0c6b8db4d4605f4b04'; // admin
 
-        <div class="field" aria-hidden="false">
-          <input id="passwordInput" type="password" placeholder="输入密码..." aria-label="密码输入框" />
-          <button id="submitBtn">提交</button>
-        </div>
+async function sha256(text){
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
-        <div>
-          <button id="showHintBtn" style="background:transparent; color:#9fbfe6; border:1px solid rgba(255,255,255,0.04); padding:8px 10px; border-radius:6px;">显示/隐藏 密码提示</button>
-          <div id="hint" class="hint" style="display:none;">（示例提示：密码是 <strong>letmein</strong> —— 生产环境不要把密码写在前端）</div>
-        </div>
-
-        <div id="error" class="error" role="status" aria-live="polite" style="display:none;"></div>
-
-        <p class="hint">安全提示：此示例为前端校验，仅用于演示。若用于真实场景，请在服务器端验证密码并通过安全会话/令牌控制访问。</p>
-      </div>
-
-      <!-- 第二部分：下载框架（受密码保护） -->
-      <div class="panel" id="downloads" aria-labelledby="dlTitle">
-        <h2 id="dlTitle">下载中心</h2>
-        <p class="hint">只有输入正确密码后才能看到此处内容。</p>
-
-        <!-- 示例文件列表（占位） -->
-        <ul class="download-list" id="fileList">
-          <li class="download-item">
-            <div class="file-meta">
-              <div class="file-name">示例文档 - 产品说明书.pdf</div>
-              <div class="file-size">1.2 MB</div>
-            </div>
-            <div>
-              <!-- href 为实际文件下载地址；当前为占位 # -->
-              <a class="download-link" href="#" download="product-manual.pdf"><button>下载</button></a>
-            </div>
-          </li>
-
-          <li class="download-item">
-            <div class="file-meta">
-              <div class="file-name">示例安装包 - Setup_v1.0.zip</div>
-              <div class="file-size">45.8 MB</div>
-            </div>
-            <div>
-              <a class="download-link" href="#" download="setup_v1.0.zip"><button>下载</button></a>
-            </div>
-          </li>
-
-          <li class="download-item">
-            <div class="file-meta">
-              <div class="file-name">示例图片集 - wallpapers.zip</div>
-              <div class="file-size">12.5 MB</div>
-            </div>
-            <div>
-              <a class="download-link" href="#" download="wallpapers.zip"><button>下载</button></a>
-            </div>
-          </li>
-        </ul>
-
-        <p class="hint">注：上面链接为占位。将来接入后台时，把 <code>href</code> 替换成服务端生成的下载 URL（可加 token/一次性链接）。</p>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // === 配置（示例） ===
-    // 注意：此处为前端示例校验，密码以纯文本放在前端，会被用户看到；真实站点应在服务器端校验。
-    const CORRECT_PASSWORD = 'letmein'; // ← 修改成你想要的密码（仅示例）
-
-    // 获取 DOM
-    const pwInput = document.getElementById('passwordInput');
-    const submitBtn = document.getElementById('submitBtn');
-    const downloads = document.getElementById('downloads');
-    const errorDiv = document.getElementById('error');
-    const hint = document.getElementById('hint');
-    const showHintBtn = document.getElementById('showHintBtn');
-
-    // 提交处理
-    function handleSubmit() {
-      const val = (pwInput.value || '').trim();
-      if (!val) {
-        showError('请输入密码。');
-        return;
-      }
-
-      // 简单校验（前端）
-      if (val === CORRECT_PASSWORD) {
-        // 成功：显示下载区并“跳转”到下载区（可改为直接跳转到另一个页面）
-        downloads.classList.add('visible');
-        errorDiv.style.display = 'none';
-        // 更新地址栏锚点（让用户感觉像是“跳转”了）
-        location.hash = '#downloads';
-        // 可选：清空密码输入
-        pwInput.value = '';
-      } else {
-        showError('密码错误，请重试。');
-      }
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+    const pw = document.getElementById('passwordInput').value.trim();
+    const hash = await sha256(pw);
+    if(hash === CORRECT_HASH){
+        // 生成简单 token (Base64 编码)
+        const token = btoa(pw + ':' + Date.now());
+        // 跳转到 downloads.html 携带 token
+        window.location.href = `downloads.html?token=${encodeURIComponent(token)}`;
+    } else {
+        document.getElementById('error').textContent = '密码错误';
     }
-
-    function showError(msg) {
-      errorDiv.textContent = msg;
-      errorDiv.style.display = 'block';
-    }
-
-    submitBtn.addEventListener('click', handleSubmit);
-    pwInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
-        handleSubmit();
-      }
-    });
-
-    showHintBtn.addEventListener('click', function () {
-      hint.style.display = hint.style.display === 'none' ? 'block' : 'none';
-    });
-
-    // 当页面载入且 URL 包含 #downloads 时，尝试自动显示（例如用户用正确密码后访问）
-    window.addEventListener('load', function () {
-      if (location.hash === '#downloads') {
-        // 这里不会绕过密码检查，但如果你希望从外部跳转并校验 token 需要后端支持
-        downloads.classList.add('visible');
-      }
-    });
-
-    // 可扩展点（注释说明）：
-    // 1) 更安全的做法：提交密码到后端（POST /api/check-password），后端返回 session 或 token。
-    //    然后前端用该 token 请求文件列表或下载链接，确保用户不能直接通过查看前端源码绕过限制。
-    // 2) 如果要真正跳转到单独的下载页面，可在校验成功后使用：
-    //       window.location.href = '/downloads.html';
-    //    或后端返回重定向 URL。
-  </script>
+});
+</script>
 </body>
 </html>
