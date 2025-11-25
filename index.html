@@ -12,8 +12,8 @@
 <script>
 const K = "a94b4c2f184927cc";
 const IV = new Uint8Array(16);
-const EP = "2zj5UrMzpBfPUVx6LxKnGgD88K9v8u1+3n3syxC5RO8=";
-const ED = "2zj5UrMzpBfPUVx6LxKnGg==";
+const EP = "2/8RV4NG1X5BmLfGFncW6A==";
+const ED = "H9owIIS67P5ZVKduz8sluQ==";
 
 async function aesKey(key) {
   return crypto.subtle.importKey(
@@ -23,22 +23,6 @@ async function aesKey(key) {
     false, 
     ["encrypt", "decrypt"]
   );
-}
-
-async function encryptAES(text, key) {
-  const keyObj = await aesKey(key);
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const paddingLen = 16 - (data.length % 16);
-  const paddedData = new Uint8Array(data.length + paddingLen);
-  paddedData.set(data);
-  paddedData.fill(paddingLen, data.length);
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-CBC", iv: IV },
-    keyObj,
-    paddedData
-  );
-  return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
 }
 
 async function decryptAES(base64, key) {
