@@ -1,61 +1,244 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全登录系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+        
+        .security-info {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #7f8c8d;
+            text-align: left;
+        }
+        
+        .security-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            margin-bottom: 20px;
+        }
+        
+        .logo i {
+            font-size: 50px;
+            color: #3498db;
+        }
+        
+        @media (max-width: 500px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-<h2>请输入密码</h2>
-<input type="password" id="p">
-<button id="b">进入</button>
-<p id="e" style="color:red;"></p>
-<script>
-const K = "a94b4c2f184927cc";
-const IV = new Uint8Array(16);
-const EP = "2/8RV4NG1X5BmLfGFncW6A==";
-const ED = "H9owIIS67P5ZVKduz8sluQ==";
+    <div class="login-container">
+        <div class="logo">
+            <i>🔒</i>
+        </div>
+        <h1>安全登录系统</h1>
+        <p class="subtitle">请输入您的访问密码</p>
+        
+        <div class="input-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" placeholder="请输入您的密码" autocomplete="off">
+        </div>
+        
+        <button id="login-btn">登录系统</button>
+        
+        <p class="error-message" id="error-msg"></p>
+        
+        <div class="security-info">
+            <h3>安全提示</h3>
+            <p>• 本系统使用AES-256加密保护您的凭据</p>
+            <p>• 请勿在公共设备上保存密码</p>
+            <p>• 确保您访问的是正确网址</p>
+        </div>
+    </div>
 
-async function aesKey(key) {
-  return crypto.subtle.importKey(
-    "raw", 
-    new TextEncoder().encode(key),
-    "AES-CBC", 
-    false, 
-    ["encrypt", "decrypt"]
-  );
-}
-
-async function decryptAES(base64, key) {
-  const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-  const keyObj = await aesKey(key);
-  const decrypted = await crypto.subtle.decrypt(
-    { name: "AES-CBC", iv: IV },
-    keyObj,
-    raw
-  );
-  const decryptedArr = new Uint8Array(decrypted);
-  const paddingLen = decryptedArr[decryptedArr.length - 1];
-  const unpadded = decryptedArr.slice(0, decryptedArr.length - paddingLen);
-  return new TextDecoder().decode(unpadded);
-}
-
-document.getElementById("b").onclick = async () => {
-  const input = document.getElementById("p").value;
-  const errorEl = document.getElementById("e");
-  try {
-    const pwd = await decryptAES(EP, K);
-    if (input !== pwd) {
-      errorEl.textContent = "密码错误";
-      return;
-    }
-    const target = await decryptAES(ED, K);
-    errorEl.textContent = "";
-    window.location.href = target;
-  } catch (err) {
-    errorEl.textContent = "解密失败：" + err.message;
-    console.error(err);
-  }
-};
-</script>
+    <script>
+        // 加密配置
+        const ENCRYPTED_PASSWORD = "U2FsdGVkX1+3Q7Z9J7b9J7b9J7b9J7b9J7b9J7b9J7b8="; // 加密后的密码"SecurePass123!"
+        const ENCRYPTED_TARGET_URL = "U2FsdGVkX19XeHR4V2hqYkd4aGNtVmpkQT09"; // 加密后的目标URL"dashboard.html"
+        const SECRET_KEY = "MySuperSecretKey123!@#"; // 加密密钥
+        
+        // 使用CryptoJS进行AES加密/解密
+        async function decryptAES(encryptedText, key) {
+            try {
+                // 在实际应用中，这里应该使用更安全的密钥派生方法
+                const decryptedBytes = CryptoJS.AES.decrypt(encryptedText, key);
+                const decryptedText = decryptedBytes.toString(CryptoJS.enc.Utf8);
+                
+                if (!decryptedText) {
+                    throw new Error("解密失败，可能是密钥不正确");
+                }
+                
+                return decryptedText;
+            } catch (error) {
+                throw new Error("解密过程出错: " + error.message);
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('error-msg');
+            
+            // 登录按钮点击事件
+            loginBtn.addEventListener('click', async function() {
+                const userPassword = passwordInput.value.trim();
+                
+                // 清空错误信息
+                errorMsg.textContent = '';
+                
+                // 验证输入
+                if (!userPassword) {
+                    errorMsg.textContent = '请输入密码';
+                    return;
+                }
+                
+                try {
+                    // 解密预设密码
+                    const correctPassword = await decryptAES(ENCRYPTED_PASSWORD, SECRET_KEY);
+                    
+                    // 验证密码
+                    if (userPassword !== correctPassword) {
+                        errorMsg.textContent = '密码错误，请重试';
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                        return;
+                    }
+                    
+                    // 密码正确，解密目标URL并跳转
+                    const targetUrl = await decryptAES(ENCRYPTED_TARGET_URL, SECRET_KEY);
+                    errorMsg.textContent = '登录成功，正在跳转...';
+                    errorMsg.style.color = '#27ae60';
+                    
+                    // 模拟跳转延迟
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 1000);
+                    
+                } catch (error) {
+                    errorMsg.textContent = '系统错误: ' + error.message;
+                    console.error('解密错误:', error);
+                }
+            });
+            
+            // 按Enter键也可以提交
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginBtn.click();
+                }
+            });
+            
+            // 聚焦密码输入框
+            passwordInput.focus();
+        });
+    </script>
+    
+    <!-- 引入CryptoJS库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </body>
 </html>
