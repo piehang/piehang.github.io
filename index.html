@@ -11,13 +11,9 @@
 <p id="e" style="color:red;"></p>
 <script>
 const K = "a94b4c2f184927cc";
-
-// 固定 IV，保证加密数据可解密
-const IV = new Uint8Array(16); // 全 0
-
-// 硬编码的加密密码和目标页面（用固定 IV 加密后的 base64）
+const IV = new Uint8Array(16);
 const EP = "2zj5UrMzpBfPUVx6LxKnGgD88K9v8u1+3n3syxC5RO8=";
-const ED = "2zj5UrMzpBfPUVx6LxKnGg=="; // downloads.html 加密后的示例
+const ED = "2zj5UrMzpBfPUVx6LxKnGg==";
 
 async function aesKey(key) {
   return crypto.subtle.importKey(
