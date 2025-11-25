@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -78,35 +79,27 @@
     </div>
 
     <script>
-        // 正确密码的SHA-256哈希值（原始密码：123456）
         const CORRECT_PWD_HASH = "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92";
         const submitBtn = document.getElementById('submitBtn');
         const passwordInput = document.getElementById('password');
         const errorTip = document.getElementById('errorTip');
         const successTip = document.getElementById('successTip');
 
-        /**
-         * SHA-256哈希加密函数
-         * @param {string} str - 要加密的字符串
-         * @returns {string} 加密后的十六进制哈希值
-         */
         async function sha256Hash(str) {
             const encoder = new TextEncoder();
             const data = encoder.encode(str);
             const hash = await crypto.subtle.digest('SHA-256', data);
-            // 将ArrayBuffer转为十六进制字符串
             return Array.from(new Uint8Array(hash))
                 .map(b => b.toString(16).padStart(2, '0'))
                 .join('');
         }
 
-        // 验证密码并跳转
         submitBtn.addEventListener('click', async function() {
             const inputPwd = passwordInput.value.trim();
             errorTip.style.display = 'none';
             successTip.style.display = 'none';
 
-            if (!inputPwd) return; // 空密码不验证
+            if (!inputPwd) return;
 
             const inputHash = await sha256Hash(inputPwd);
             if (inputHash === CORRECT_PWD_HASH) {
@@ -121,19 +114,12 @@
             }
         });
 
-        // 回车键触发验证
         passwordInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 submitBtn.click();
             }
         });
-
-        // 生成新密码的哈希值（如需修改密码，取消注释运行）
-        // (async () => {
-        //     const newPwd = "新密码";
-        //     const newHash = await sha256Hash(newPwd);
-        //     console.log(`新密码${newPwd}的哈希值：`, newHash);
-        // })();
     </script>
 </body>
 </html>
+```
