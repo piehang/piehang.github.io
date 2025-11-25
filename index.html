@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>密码页</title>
+<title>密码页（AES 版本）</title>
 </head>
 <body>
 <h1>请输入密码</h1>
@@ -13,22 +13,40 @@
 
 <script>
 const CORRECT_HASH = '8c6976e5b5410415bde908bd4dee15dfb167a42f0ebfbd0c6b8db4d4605f4b04'; // admin
+const AES_KEY = '1234567890123456'; // 16位 AES key（示例） 前端可见，不安全
 
 async function sha256(text){
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+    return hashArray.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// AES 加密
+async function encryptAES(text, key) {
+    const enc = new TextEncoder();
+    const keyData = enc.encode(key);
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw', keyData, { name: 'AES-CBC' }, false, ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+    const cipherBuffer = await crypto.subtle.encrypt(
+        {name:'AES-CBC', iv}, cryptoKey, enc.encode(text)
+    );
+    // 返回 iv+cipher 的 Base64
+    const combined = new Uint8Array(iv.byteLength + cipherBuffer.byteLength);
+    combined.set(iv,0);
+    combined.set(new Uint8Array(cipherBuffer), iv.byteLength);
+    return btoa(String.fromCharCode(...combined));
 }
 
 document.getElementById('submitBtn').addEventListener('click', async ()=>{
     const pw = document.getElementById('passwordInput').value.trim();
     const hash = await sha256(pw);
     if(hash === CORRECT_HASH){
-        // 生成简单 token (Base64 编码)
-        const token = btoa(pw + ':' + Date.now());
-        // 跳转到 downloads.html 携带 token
+        const payload = JSON.stringify({hash, ts: Date.now()});
+        const token = await encryptAES(payload, AES_KEY);
         window.location.href = `downloads.html?token=${encodeURIComponent(token)}`;
     } else {
         document.getElementById('error').textContent = '密码错误';
