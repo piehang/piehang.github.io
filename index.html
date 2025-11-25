@@ -10,33 +10,88 @@
 <button id="b">进入</button>
 <p id="e" style="color:red;"></p>
 <script>
-const K="a94b4c2f184927cc";
-const EP="1nK5vZjb+bKXWdEsGGXayA==";
-const ED="0LnBvYFoOF2OkDbSAGr90mZwMsm63BEjeH0mdoSKe9A=";
+const K = "a94b4c2f184927cc";
+const EP = "nLmZ9sK2xQ5pR8tV7bN0gH3jF6kM1dP4aS7fG2hJ9lK0zX8cV5bN2mB6vC9xL7sA=";
+const ED = "kM3sP5dQ7fA2gH9jK1lZ8xV4bN6cM0sL3pR2tF5hJ7kG9dS1aP4fB6vC8nX0mZ7l=";
 
-async function aesKey(key){
-  return crypto.subtle.importKey("raw", new TextEncoder().encode(key),"AES-CBC", false, ["encrypt","decrypt"]);
+function generateIV() {
+  return crypto.getRandomValues(new Uint8Array(16));
 }
 
-async function decryptAES(base64,key){
-  const raw=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
-  const iv=raw.slice(0,16);
-  const data=raw.slice(16);
-  const keyObj=await aesKey(key);
-  const r=await crypto.subtle.decrypt({name:"AES-CBC",iv},keyObj,data);
-  return new TextDecoder().decode(r);
+async function aesKey(key) {
+  return crypto.subtle.importKey(
+    "raw", 
+    new TextEncoder().encode(key),
+    "AES-CBC", 
+    false, 
+    ["encrypt", "decrypt"]
+  );
 }
 
-document.getElementById("b").onclick=async()=>{
-  const input=document.getElementById("p").value;
-  const pwd=await decryptAES(EP,K);
-  if(input!==pwd){
-    document.getElementById("e").textContent="密码错误";
-    return;
+async function encryptAES(text, key) {
+  const iv = generateIV();
+  const keyObj = await aesKey(key);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const paddingLen = 16 - (data.length % 16);
+  const paddedData = new Uint8Array(data.length + paddingLen);
+  paddedData.set(data);
+  paddedData.fill(paddingLen, data.length);
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-CBC", iv },
+    keyObj,
+    paddedData
+  );
+  const result = new Uint8Array(iv.length + encrypted.byteLength);
+  result.set(iv);
+  result.set(new Uint8Array(encrypted), iv.length);
+  return btoa(String.fromCharCode(...result));
+}
+
+async function decryptAES(base64, key) {
+  const raw = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+  const iv = raw.slice(0, 16);
+  const data = raw.slice(16);
+  const keyObj = await aesKey(key);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-CBC", iv },
+    keyObj,
+    data
+  );
+  const decryptedArr = new Uint8Array(decrypted);
+  const paddingLen = decryptedArr[decryptedArr.length - 1];
+  const unpadded = decryptedArr.slice(0, decryptedArr.length - paddingLen);
+  return new TextDecoder().decode(unpadded);
+}
+
+async function initEncryptedData() {
+  const pwd = "123456";
+  const target = "downloads.html";
+  const encryptedPwd = await encryptAES(pwd, K);
+  const encryptedTarget = await encryptAES(target, K);
+  console.log("生成的加密密码EP：", encryptedPwd);
+  console.log("生成的加密目标ED：", encryptedTarget);
+}
+
+document.getElementById("b").onclick = async () => {
+  const input = document.getElementById("p").value;
+  const errorEl = document.getElementById("e");
+  try {
+    const pwd = await decryptAES(EP, K);
+    if (input !== pwd) {
+      errorEl.textContent = "密码错误";
+      return;
+    }
+    const target = await decryptAES(ED, K);
+    errorEl.textContent = "";
+    window.location.href = target;
+  } catch (err) {
+    errorEl.textContent = "解密失败：" + err.message;
+    console.error(err);
   }
-  const target=await decryptAES(ED,K);
-  location.href=target;
 };
+
+initEncryptedData();
 </script>
 </body>
 </html>
