@@ -1,188 +1,588 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>航？ | 前端开发者</title>
-    <meta name="description" content="张三的个人网站 - 前端开发者 / UI设计师">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        :root {
-            --bg: #fafafa;
-            --text: #222;
-            --primary: #2563eb;
-            --card: #ffffff;
-            --shadow: rgba(0,0,0,0.1);
-        }
-        .dark {
-            --bg: #0f172a;
-            --text: #e2e8f0;
-            --primary: #60a5fa;
-            --card: #1e293b;
-            --shadow: rgba(0,0,0,0.3);
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            transition: all 0.3s;
-        }
-        header {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            position: relative;
-        }
-        header::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.4);
-        }
-        .hero {
-            position: relative;
-            z-index: 1;
-        }
-        .avatar {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: 6px solid rgba(255,255,255,0.3);
-            margin-bottom: 1.5rem;
-            object-fit: cover;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        }
-        h1 { font-size: 3.5rem; margin-bottom: 0.5rem; }
-        p.subtitle { font-size: 1.6rem; opacity: 0.9; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
-        section { padding: 6rem 0; }
-        .about, .projects {
-            background: var(--card);
-            box-shadow: 0 10px 30px var(--shadow);
-            border-radius: 16px;
-            margin: 4rem 0;
-            padding: 4rem;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-        .card {
-            background: var(--card);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px var(--shadow);
-            transition: transform 0.3s;
-        }
-        .card:hover { transform: translateY(-10px); }
-        footer {
-            text-align: center;
-            padding: 4rem 0;
-            background: var(--card);
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 50px;
-            margin-top: 2rem;
-            transition: all 0.3s;
-        }
-        .btn:hover { transform: scale(1.05); }
-        .mode-toggle {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 100;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-        }
-        @media (max-width: 768px) {
-            .avatar { width: 140px; height: 140px; }
-            h1 { font-size: 2.8rem; }
-            .about, .projects { padding: 2rem; }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>高级网页动画 — Apple 风格示例</title>
+<style>
+  /* ========== 基本重置 ========== */
+  :root{
+    --bg-1: #0f1724;
+    --bg-2: #081022;
+    --accent: #7dd3fc;
+    --muted: rgba(255,255,255,0.65);
+    --glass: rgba(255,255,255,0.06);
+    --card-w: 360px;
+    --card-h: 760px;
+    --ease: cubic-bezier(.2,.9,.25,1);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", "Microsoft Yahei", sans-serif;
+    background: linear-gradient(180deg,var(--bg-1),var(--bg-2));
+    color: #fff;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ========== 布局 ========== */
+  .hero{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding:80px 24px;
+    overflow:hidden;
+  }
+
+  /* Canvas 背景层（粒子） */
+  canvas.bg-canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  /* 动态渐变带 */
+  .gradient-band{
+    position:absolute;
+    width:140%;
+    height:420px;
+    left:-20%;
+    top:10%;
+    transform: rotate(-12deg);
+    background: linear-gradient(90deg, rgba(125,211,252,0.06), rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.02));
+    filter: blur(40px) saturate(140%);
+    animation: bandMove 12s linear infinite;
+    z-index:1;
+    mix-blend-mode:screen;
+  }
+  @keyframes bandMove{
+    0%{transform: rotate(-12deg) translateX(-5%);}
+    50%{transform: rotate(-12deg) translateX(12%);}
+    100%{transform: rotate(-12deg) translateX(-5%);}
+  }
+
+  /* 内容容器 */
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:48px;
+    align-items:center;
+    width:min(1200px,95%);
+  }
+
+  /* 左侧文案 */
+  .lead{
+    max-width:680px;
+  }
+  .eyebrow{
+    color:var(--muted);
+    font-size:13px;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 18px 0;
+    font-size:48px;
+    line-height:1.02;
+    letter-spacing: -0.02em;
+    font-weight:700;
+    text-shadow: 0 6px 28px rgba(2,6,23,0.6);
+    background: linear-gradient(90deg,#fff 0%, #d1f7ff 50%, #fff 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  p.lead-desc{
+    margin:0 0 26px 0;
+    color:var(--muted);
+    font-size:18px;
+    line-height:1.6;
+  }
+  .cta-row{
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+  .btn{
+    border:0;
+    padding:12px 18px;
+    border-radius:12px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .28s var(--ease), box-shadow .2s var(--ease);
+    box-shadow: 0 6px 20px rgba(2,6,23,0.5);
+  }
+  .btn-primary{
+    background: linear-gradient(90deg,#fff 0%, #e6fbff 100%);
+    color: #022a3a;
+  }
+  .btn-ghost{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.08);
+    color:var(--muted);
+  }
+  .btn:active{ transform:translateY(1px) }
+
+  /* 右侧 3D 产品卡 */
+  .stage{
+    perspective:1500px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .card-wrap{
+    width:var(--card-w);
+    height:var(--card-h);
+    position:relative;
+    transform-style:preserve-3d;
+    transition:transform .9s var(--ease), box-shadow .6s var(--ease);
+    will-change:transform;
+    user-select:none;
+    touch-action:none;
+  }
+
+  /* mock device */
+  .device{
+    position:absolute;
+    inset:0;
+    border-radius:44px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    box-shadow: 0 30px 80px rgba(2,6,23,0.6);
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow:hidden;
+    transform: translateZ(48px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* 屏幕 */
+  .screen{
+    width:88%;
+    height:86%;
+    border-radius:28px;
+    background: linear-gradient(180deg,#001428 0%, #082033 100%);
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: inset 0 30px 60px rgba(0,0,0,0.6);
+  }
+
+  /* 屏幕内的样例“壁纸” */
+  .wallpaper{
+    position:absolute;
+    inset:0;
+    background: radial-gradient(600px 400px at 10% 20%, rgba(125,211,252,0.12), transparent 12%),
+                radial-gradient(500px 300px at 90% 80%, rgba(255,255,255,0.04), transparent 10%),
+                linear-gradient(180deg,#011425 0%, #082033 100%);
+    transform: translateZ(20px) scale(1.02);
+    transition: transform .45s var(--ease);
+  }
+
+  /* 玻璃高光 (SVG overlay) */
+  .gloss{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    mix-blend-mode:screen;
+    opacity:0.85;
+  }
+
+  /* 前景的反射光带 */
+  .shine{
+    position:absolute;
+    width:220%;
+    height:60%;
+    left:-60%;
+    top:-10%;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.28), rgba(255,255,255,0.02));
+    transform: rotate(-20deg);
+    filter: blur(30px);
+    opacity:0.9;
+    pointer-events:none;
+    transition: transform .6s var(--ease);
+  }
+
+  /* 产品阴影地面 */
+  .ground{
+    position:absolute;
+    left:50%;
+    bottom:-8%;
+    transform:translateX(-50%) rotateX(80deg);
+    width:420px;
+    height:140px;
+    background: radial-gradient(closest-side, rgba(0,0,0,0.45), transparent 60%);
+    filter: blur(30px);
+    z-index:-1;
+  }
+
+  /* 一些小提示和二级内容 */
+  .features{
+    padding:80px 24px;
+    max-width:1100px;
+    margin:0 auto 160px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:28px;
+  }
+  .feature{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:22px;
+    border:1px solid rgba(255,255,255,0.04);
+    transition: transform .45s var(--ease);
+  }
+  .feature h3{ margin:0 0 8px 0 }
+  .feature p{ margin:0; color:var(--muted) }
+
+  /* 小的进入动画类 */
+  .reveal{
+    opacity:0;
+    transform: translateY(18px) scale(.996);
+    transition: opacity .7s var(--ease), transform .7s var(--ease);
+    will-change:opacity,transform;
+  }
+  .reveal.is-visible{
+    opacity:1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* 响应式 */
+  @media (max-width:980px){
+    .hero-inner{ grid-template-columns: 1fr; gap:28px; }
+    .card-wrap{ margin:0 auto; }
+  }
+
+  /* 无障碍：如果用户偏好减少动画，尽量关闭动画 */
+  @media (prefers-reduced-motion: reduce){
+    .gradient-band, .bandMove,
+    .card-wrap, .wallpaper, .shine, .bg-canvas {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* helper */
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
 </head>
 <body>
-    <button class="mode-toggle" onclick="document.body.classList.toggle('dark')">
-        <i class="fas fa-moon"></i>
-    </button>
+  <main>
+    <section class="hero" aria-label="Hero — 高级网页动画示例">
+      <canvas class="bg-canvas" aria-hidden="true"></canvas>
+      <div class="gradient-band" aria-hidden="true"></div>
 
-    <header>
-        <div class="hero">
-            <!-- 这里就是你的头像 -->
-            <img src="IMG_20251123_161055.jpg" alt="我的头像" class="avatar">
-            <h1>你好，我是小三</h1>
-            <p class="subtitle">前端开发者 & UI 设计师</p>
-            <a href="#about" class="btn">了解更多</a>
+      <div class="hero-inner">
+        <div class="lead">
+          <div class="eyebrow reveal" style="transition-delay:.1s">Design • Motion • Web</div>
+          <h1 class="reveal" style="transition-delay:.18s">Refined motion, delightful details.</h1>
+          <p class="lead-desc reveal" style="transition-delay:.26s">
+            一个可交互的 3D 产品演示卡片，拥有粒子背景、柔和光带、鼠标/触控驱动的视差和滚动触发的淡入效果 — 参考 Apple 的视觉与交互风格（但为网页所优化）。
+          </p>
+          <div class="cta-row reveal" style="transition-delay:.34s">
+            <button class="btn btn-primary" id="exploreBtn">立即体验</button>
+            <button class="btn btn-ghost" id="learnBtn">了解更多</button>
+          </div>
         </div>
-    </header>
 
-    <div class="container">
-        <section id="about" class="about">
-            <h2>关于我</h2>
-            <p>我是一名前端开发者，热爱用代码创造美观且实用的数字体验。擅长 React、Vue、TypeScript，以及各种现代前端技术栈。目前在寻找新的机会，一起创造有意思的东西吧！</p>
-            
-            <h3 style="margin-top: 3rem;">技能</h3>
-            <div class="grid">
-                <div class="card">HTML / CSS / JavaScript</div>
-                <div class="card">React / Vue / Next.js</div>
-                <div class="card">TypeScript / Node.js</div>
-                <div class="card">UI/UX 设计</div>
-            </div>
-        </section>
+        <div class="stage" aria-hidden="false">
+          <div class="card-wrap" id="card" role="img" aria-label="3D 产品展示">
+            <div class="device" id="device">
+              <div class="screen" id="screen">
+                <div class="wallpaper" id="wallpaper" aria-hidden="true"></div>
+                <!-- 一个 SVG 高光覆盖 -->
+                <svg class="gloss" viewBox="0 0 800 1400" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="g1" x1="0" x2="1">
+                      <stop offset="0" stop-color="rgba(255,255,255,0.08)"/>
+                      <stop offset="0.5" stop-color="rgba(255,255,255,0.22)"/>
+                      <stop offset="1" stop-color="rgba(255,255,255,0.02)"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 40 C200 0 600 0 800 40 L800 1400 L0 1400 Z" fill="url(#g1)" opacity="0.45"></path>
+                </svg>
 
-        <section class="projects">
-            <h2>作品集</h2>
-            <div class="grid">
-                <div class="card">
-                    <h3>在线聊天应用</h3>
-                    <p>使用 React + Firebase 实现实时聊天</p>
+                <!-- 前景光带 -->
+                <div class="shine" id="shine" aria-hidden="true"></div>
+
+                <!-- 模拟屏幕内容：一些圆点（代表图标） -->
+                <div style="position:absolute;left:10%;top:8%;width:80%;height:84%;display:grid;grid-template-columns:repeat(4,1fr);gap:6%;padding:6% 0;pointer-events:none;transform:translateZ(30px);">
+                  <!-- 16 icons -->
+                  <div style="width:100%;height:100%;display:grid;align-items:center;justify-items:center;">
+                    <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(180deg,#3ad0ff,#1a9fb8);box-shadow:0 8px 20px rgba(0,0,0,0.45)"></div>
+                  </div>
+                  <!-- copy 15 times quickly with JS? but we'll include a few static and replicate with CSS grid fill using generated content isn't needed -->
+                  <div style="width:100%;height:100%;display:grid;align-items:center;justify-items:center;">
+                    <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(180deg,#ffd6e0,#ff8aa8);box-shadow:0 8px 20px rgba(0,0,0,0.45)"></div>
+                  </div>
+                  <div style="width:100%;height:100%;display:grid;align-items:center;justify-items:center;">
+                    <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(180deg,#c7f9d8,#36d07a);box-shadow:0 8px 20px rgba(0,0,0,0.45)"></div>
+                  </div>
+                  <div style="width:100%;height:100%;display:grid;align-items:center;justify-items:center;">
+                    <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(180deg,#ffe4a1,#f7b84b);box-shadow:0 8px 20px rgba(0,0,0,0.45)"></div>
+                  </div>
+
+                  <!-- 为视觉填充，余下格用伪元素样式填充不必手动放 16 个 -->
+                  <!-- We'll let the wallpaper and shine make it look rich -->
                 </div>
-                <div class="card">
-                    <h3>电商平台</h3>
-                    <p>Next.js + Tailwind CSS 完整项目</p>
-                </div>
-                <div class="card">
-                    <h3>个人博客系统</h3>
-                    <p>支持 Markdown + 暗黑模式</p>
-                </div>
-            </div>
-        </section>
-    </div>
 
-    <footer>
-        <p>© 2025 张三 All rights reserved.</p>
-        <p>
-            <a href="#"><i class="fab fa-github"></i></a>  
-            <a href="#"><i class="fab fa-weixin"></i></a>  
-            <a href="#"><i class="fab fa-twitter"></i></a>
-        </p>
-    </footer>
+              </div> <!-- screen -->
+            </div> <!-- device -->
+            <div class="ground" aria-hidden="true"></div>
+          </div>
+        </div>
 
-    <script>
-        // 自动根据系统暗黑模式
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('dark');
-        }
-    </script>
+      </div> <!-- hero-inner -->
+    </section>
+
+    <section class="features" aria-label="Features">
+      <article class="feature reveal"><h3>流畅的 3D 交互</h3><p>鼠标或触摸拖拽即可旋转，带有物理减速与回弹。</p></article>
+      <article class="feature reveal"><h3>高性能画布粒子</h3><p>低 CPU 负载的粒子系统：基于 requestAnimationFrame，自适应帧率。</p></article>
+      <article class="feature reveal"><h3>渐进增强与无障碍</h3><p>尊重 prefers-reduced-motion，保证屏幕阅读器可访问。</p></article>
+    </section>
+  </main>
+
+<script>
+/* ===========================
+   JS: 交互、粒子、3D 响应与滚动 reveal
+   完整实现；无外部依赖
+   =========================== */
+
+(function(){
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 1) Canvas 粒子背景 ---------- */
+  const canvas = document.querySelector('.bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W = canvas.width = innerWidth;
+  let H = canvas.height = innerHeight;
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  let particles = [];
+  const PARTICLE_COUNT = Math.max(18, Math.floor(W * H / 90000)); //  scale count with area
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function initParticles(){
+    particles = [];
+    for(let i=0;i<PARTICLE_COUNT;i++){
+      particles.push({
+        x: rand(0, W),
+        y: rand(0, H),
+        r: rand(1.2, 3.6),
+        vx: rand(-0.15, 0.15),
+        vy: rand(-0.05, 0.05),
+        alpha: rand(0.06, 0.22),
+        hue: 200 + rand(-30,30)
+      });
+    }
+  }
+  initParticles();
+
+  let lastFrameTime = performance.now();
+  let frameClamp = 0;
+
+  function drawParticles(now){
+    if(prefersReduced) return; // 偏好减少动画时关闭
+    const dt = Math.min(40, now - lastFrameTime);
+    lastFrameTime = now;
+
+    ctx.clearRect(0,0,W,H);
+
+    for(const p of particles){
+      p.x += p.vx * dt * 0.06;
+      p.y += p.vy * dt * 0.06;
+
+      // bounds wrap
+      if(p.x < -20) p.x = W + 20;
+      if(p.x > W + 20) p.x = -20;
+      if(p.y < -20) p.y = H + 20;
+      if(p.y > H + 20) p.y = -20;
+
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${p.hue} 100% 70% / ${p.alpha})`.replace(',', '');
+      // subtle glow using shadow blur
+      ctx.shadowBlur = Math.min(28, p.r * 6);
+      ctx.shadowColor = `hsla(${p.hue} 100% 70% / ${p.alpha*1.2})`.replace(',', '');
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    frameClamp++;
+    // adaptive: skip frames occasionally on low-perf devices
+    requestAnimationFrame(drawParticles);
+  }
+  requestAnimationFrame(drawParticles);
+
+  window.addEventListener('resize', ()=> {
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    initParticles();
+  });
+
+  /* ---------- 2) 3D 产品卡：鼠标/触控驱动与缓动 ---------- */
+  const card = document.getElementById('card');
+  const device = document.getElementById('device');
+  const wallpaper = document.getElementById('wallpaper');
+  const shine = document.getElementById('shine');
+
+  let pointer = {x:0,y:0};
+  let rot = {x:0,y:0};
+  let velocity = {x:0,y:0};
+  const stiffness = 0.12; // lower = more floaty
+  const damping = 0.86;
+
+  // 获取 bounding 用于将 pointer 转换为相对值
+  function getCardBounds(){ return card.getBoundingClientRect(); }
+
+  function onPointerMove(clientX, clientY){
+    const r = getCardBounds();
+    const px = (clientX - (r.left + r.width/2)) / (r.width/2); // -1..1
+    const py = (clientY - (r.top + r.height/2)) / (r.height/2); // -1..1
+    const targetY = -py * 12; // rotateX
+    const targetX = px * 22; // rotateY
+    // velocity target
+    velocity.x += (targetX - rot.x) * stiffness;
+    velocity.y += (targetY - rot.y) * stiffness;
+  }
+
+  // 鼠标事件
+  let isPointerDown = false;
+  card.addEventListener('pointerdown', (e)=>{
+    isPointerDown = true;
+    card.setPointerCapture(e.pointerId);
+  });
+  card.addEventListener('pointerup', (e)=>{
+    isPointerDown = false;
+    try { card.releasePointerCapture(e.pointerId); } catch(e){}
+  });
+  card.addEventListener('pointermove', (e)=>{
+    onPointerMove(e.clientX, e.clientY);
+  });
+  // 进入/离开：轻微放大/收缩
+  card.addEventListener('pointerenter', ()=> {
+    card.style.transition = 'transform .32s ' + 'cubic-bezier(.2,.9,.25,1)';
+    card.style.transform = 'scale(1.03)';
+  });
+  card.addEventListener('pointerleave', ()=> {
+    card.style.transform = 'scale(1)';
+  });
+
+  // animate loop for smooth decay
+  function animateCard(){
+    velocity.x *= damping;
+    velocity.y *= damping;
+    rot.x += velocity.x;
+    rot.y += velocity.y;
+
+    // limit rotation for nice feel
+    rot.x = Math.max(-30, Math.min(30, rot.x));
+    rot.y = Math.max(-30, Math.min(30, rot.y));
+
+    // apply transforms
+    const transform = `rotateX(${rot.y.toFixed(2)}deg) rotateY(${rot.x.toFixed(2)}deg) translateZ(0)`;
+    card.style.transform = `scale(1) ${transform}`;
+
+    // wallpaper parallax & shine offset
+    wallpaper.style.transform = `translateZ(24px) translateX(${rot.x * 0.6}px) translateY(${rot.y * -0.45}px) scale(1.02)`;
+    shine.style.transform = `rotate(-20deg) translateX(${rot.x * -1.2}px) translateY(${rot.y * -0.6}px)`;
+
+    requestAnimationFrame(animateCard);
+  }
+  requestAnimationFrame(animateCard);
+
+  // 鼠标点击按钮能产生轻微弹跳效果
+  document.getElementById('exploreBtn').addEventListener('click', ()=>{
+    // temporary "pulse" motion
+    velocity.x += -8;
+    velocity.y += -6;
+  });
+
+  /* ---------- 3) 滚动触发 reveal（IntersectionObserver） ---------- */
+  const revealEls = Array.from(document.querySelectorAll('.reveal'));
+  const io = new IntersectionObserver((entries)=>{
+    for(const e of entries){
+      if(e.isIntersecting){
+        e.target.classList.add('is-visible');
+        // once visible, unobserve to improve perf
+        io.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.15 });
+
+  revealEls.forEach(el => io.observe(el));
+
+  /* ---------- 4) 轻微浮动自动动画（非必要） ---------- */
+  // subtle idle motion only if not reduced motion
+  if(!prefersReduced){
+    let t0 = performance.now();
+    (function idle(){
+      const t = performance.now();
+      const dt = (t - t0) * 0.001;
+      t0 = t;
+      // create gentle breathing: change wallpaper translateZ and device shadow
+      const breathe = Math.sin(t*0.0009)*4;
+      const rotate = Math.cos(t*0.0006)*0.5;
+      // apply to device
+      device.style.transform = `translateZ(${48 + breathe}px) rotateZ(${rotate}deg)`;
+      requestAnimationFrame(idle);
+    })();
+  } else {
+    device.style.transform = 'translateZ(48px)';
+  }
+
+  /* ---------- 5) 键盘无障碍：焦点时给出提示旋转 ---------- */
+  card.setAttribute('tabindex', '0');
+  card.addEventListener('focus', ()=> {
+    // tiny nudge when focused
+    velocity.x += -6;
+    velocity.y += -3;
+  });
+
+  /* ---------- 6) 性能与降级提示 ---------- */
+  // 如果设备内存或性能指标低，适当降频 canvas
+  if(navigator.deviceMemory && navigator.deviceMemory < 1){
+    // extremely low memory: reduce particle count
+    particles.splice(0, Math.floor(particles.length * 0.7));
+  }
+
+  // 务必捕获错误避免阻塞
+  window.addEventListener('error', (ev)=> {
+    console.warn('Runtime error (graceful):', ev.error);
+  });
+
+  /* ---------- 小技巧：点击 Learn 按钮平滑滚动到特性区域 ---------- */
+  document.getElementById('learnBtn').addEventListener('click', ()=>{
+    document.querySelector('.features').scrollIntoView({behavior:'smooth'});
+  });
+
+})();
+</script>
 </body>
 </html>
